@@ -48,6 +48,6 @@ main = do
     let program = readProgram contents
         gravityAssistProgram = restoreGravityAssistProgram program
         output = runProgram 0 (Just gravityAssistProgram)
-    if isJust output
-        then putStrLn $ show (head $ fromJust output)
-        else return ()
+    case output of
+        Just o -> print $ head o
+        _ -> return ()
