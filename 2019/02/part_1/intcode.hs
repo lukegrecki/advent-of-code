@@ -3,35 +3,51 @@ import Data.Char
 import Data.List
 import Data.List.Split
 
+readProgram :: String -> [Int]
+readProgram = map read . splitOn ","
+
+writeProgram :: [Int] -> String
+writeProgram = intercalate "," . map show
+
+restoreGravityAssistProgram :: [Int] -> [Int]
+restoreGravityAssistProgram p = replaceIndexWith 2 2 (replaceIndexWith 1 12 p)
+
 replaceIndexWith :: Int -> Int -> [Int] -> [Int]
 replaceIndexWith index newValue list = 
     let listStart = take index list
         listEnd = drop (index + 1) list
     in listStart ++ [newValue] ++ listEnd
 
-runProgram1 :: [Int] -> [Int]
-runProgram1 p =
-    let sum = p !! (p !! 1) + p !! (p !! 2)
-        position = p !! 3
+runProgram1 :: Int -> [Int] -> [Int]
+runProgram1 i p =
+    let sum = p !! (p !! (i + 1)) + p !! (p !! (i + 2))
+        position = p !! (i + 3)
     in replaceIndexWith position sum p
 
-runProgram2 :: [Int] -> [Int]
-runProgram2 p =
-    let product = p !! (p !! 1) * p !! (p !! 2)
-        position = p !! 3
-    in replaceIndexWith position product p
+runProgram2 :: Int -> [Int] -> [Int]
+runProgram2 i p =
+    let product = p !! (p !! (i + 1)) * p !! (p !! (i + 2))
+        position = p !! (i + 3)
+    in replaceIndexWith position product p 
 
-runProgram :: [Int] -> Maybe [Int]
-runProgram p
-    | opCode == 1 = Just $ runProgram1 p
-    | opCode == 2 = Just $ runProgram2 p
-    | otherwise = Nothing
-    where opCode = head p
+runProgram :: Int -> Maybe [Int] -> Maybe [Int]
+runProgram i p
+    | isJust p =
+        let program = fromJust p
+            opCode = program !! i
+            nextIndex = i + 4
+        in case opCode of
+            1 -> runProgram nextIndex (Just $ runProgram1 i program)
+            2 -> runProgram nextIndex (Just $ runProgram2 i program)
+            99 -> Just program
+            _ -> Nothing
+    | otherwise = Nothing        
 
 main = do
     contents <- getContents
-    let program = map read (splitOn "," contents)
-        output = runProgram program
-    if isJust output 
-        then putStrLn $ intercalate "," $ map show (fromJust output)
+    let program = readProgram contents
+        gravityAssistProgram = restoreGravityAssistProgram program
+        output = runProgram 0 (Just gravityAssistProgram)
+    if isJust output
+        then putStrLn $ show (head $ fromJust output)
         else return ()
