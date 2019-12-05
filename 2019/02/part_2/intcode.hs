@@ -11,6 +11,10 @@ type Address = Int
 type InstructionPointer = Int
 type Instructions = [Int]
 type Value = Int
+type Output = Int
+type Target = Int
+type ParameterSet = (Noun, Verb)
+type OutputSet = (ParameterSet, Output)
 
 readMemory :: String -> Memory
 readMemory = map read . splitOn ","
@@ -18,8 +22,11 @@ readMemory = map read . splitOn ","
 writeMemory :: Memory -> String
 writeMemory = intercalate "," . map show
 
+takeOutput :: Memory -> Output
+takeOutput = head
+
 writeOutput :: Memory -> String
-writeOutput = show . head
+writeOutput = show . takeOutput
 
 replaceMemoryAt :: Address -> Value -> Memory -> Memory
 replaceMemoryAt a v m = 
@@ -27,8 +34,8 @@ replaceMemoryAt a v m =
         memoryEnd = drop (a + 1) m
     in memoryStart ++ [v] ++ memoryEnd
 
-restoreGravityAssistMemory :: Noun -> Verb -> Memory -> Memory
-restoreGravityAssistMemory n v m = replaceMemoryAt 2 v (replaceMemoryAt 1 n m)
+restoreGravityAssistMemory :: Memory -> ParameterSet -> Memory
+restoreGravityAssistMemory m (n, v) = replaceMemoryAt 2 v (replaceMemoryAt 1 n m)
 
 runProgram1 :: Address -> Memory -> Memory
 runProgram1 a m =
@@ -52,14 +59,31 @@ runProgram pointer instructions =
         99 -> Just instructions
         _ -> Nothing
 
+getOutput :: Memory -> ParameterSet -> Maybe OutputSet
+getOutput memory parameterSet = let startAddress = 0
+                                    gravityAssistMemory = restoreGravityAssistMemory memory parameterSet
+                                    newMemory = runProgram startAddress gravityAssistMemory
+                                in case newMemory of
+                                    Just m -> Just (parameterSet, takeOutput m)
+                                    _ -> Nothing
+
+checkTarget :: Target -> Maybe OutputSet -> Bool
+checkTarget t (Just ((n, v), o)) = o == t
+checkTarget _ _ = False
+
+findSolution :: Memory -> Target -> [Noun] -> [Verb] -> Maybe OutputSet
+findSolution memory target nouns verbs =
+    let parameterSets = [ (n, v) | n <- nouns, v <- verbs ]
+        outputSets = map (getOutput memory) parameterSets
+    in head $ filter (checkTarget target) outputSets
+
 main = do
     contents <- getContents
-    let noun = 12
-        verb = 2
+    let target = 19690720
+        nouns = [1,2..99]
+        verbs = [1,2..99]
         memory = readMemory contents
-        startAddress = 0
-        gravityAssistMemory = restoreGravityAssistMemory noun verb memory
-        newMemory = runProgram startAddress gravityAssistMemory
-    case newMemory of
-        Just m -> putStrLn $ writeOutput m
+        solution = findSolution memory target nouns verbs 
+    case solution of
+        Just ((noun, verb), output) -> print (100 * noun + verb)
         _ -> return ()
