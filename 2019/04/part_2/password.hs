@@ -1,20 +1,29 @@
 import Data.Char
+import Data.List
 
-digits :: Int -> [Int]
+type Password = Int
+type PasswordDigits = [Int]
+
+digits :: Password -> PasswordDigits
 digits = map digitToInt . show
 
-hasAdjacentDigits :: [Int] -> Bool
+hasAdjacentDigits :: PasswordDigits -> Bool
 hasAdjacentDigits (x1:x2:xs) = hasAdjacentDigits (x2:xs) || (x1 - x2 == 0)
 hasAdjacentDigits _ = False
 
-isMonotonic :: [Int] -> Bool
+isMonotonic :: PasswordDigits -> Bool
 isMonotonic (x1:x2:xs) = isMonotonic (x2:xs) && (x2 - x1 >= 0)
 isMonotonic _ = True
 
-isValidPassword :: Int -> Bool
+hasValidGroups :: PasswordDigits -> Bool
+hasValidGroups pd = 
+    let requiredGroupSize = 2
+    in requiredGroupSize `elem` map length (group pd)
+
+isValidPassword :: Password -> Bool
 isValidPassword i =
     let d = digits i
-    in hasAdjacentDigits d && isMonotonic d
+    in isMonotonic d && hasValidGroups d
 
 main = do
     let lowerBound = 145852
