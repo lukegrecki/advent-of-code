@@ -2,6 +2,7 @@ import Data.Maybe
 import Data.Char
 import Data.List
 import Data.List.Split
+import qualified Data.Set as Set
 
 type Direction = Char
 type Magnitude = Int
@@ -11,6 +12,7 @@ type X = Int
 type Y = Int
 type Position = (X, Y)
 type Trajectory = [Position]
+type TrajectoryPositions = [Position]
 type Distance = Int
 
 parseToken :: String -> Move
@@ -41,17 +43,24 @@ toTrajectory p =
 manhattanDistance :: (Position, Position) -> Int
 manhattanDistance ((x1, y1), (x2, y2)) = abs (x1 - x2) + abs (y1 - y2)
 
+distanceFromOrigin :: Position -> Int
+distanceFromOrigin p = 
+    let origin = (0, 0)
+    in manhattanDistance (origin, p)
+
 isIntersection :: (Position, Position) -> Bool
 isIntersection (p1, p2) = manhattanDistance (p1, p2) == 0
 
-findIntersections :: [Trajectory] -> [Position]
-findIntersections (t1:t2:_) = map fst (filter isIntersection [ (p1, p2) | p1 <- t1, p2 <- t2])
+findClosestIntersection :: [TrajectoryPositions] -> Position
+findClosestIntersection (t1:t2:_) = fst . head $ filter isIntersection [ (p1, p2) | p1 <- t1, p2 <- t2]
+
+findCloserPosition :: Position -> Position -> Ordering
+findCloserPosition p1 p2 = compare (distanceFromOrigin p1) (distanceFromOrigin p2)
 
 main = do
     contents <- getContents
     let paths = readPaths contents
         trajectories = map toTrajectory paths
-        intersections = findIntersections trajectories
-        zero = (0, 0)
-        smallestDistance = minimum $ map manhattanDistance $ zip (repeat zero) intersections
-    print smallestDistance
+        trajectoryPositions = map (sortBy findCloserPosition) trajectories
+        closestIntersection = findClosestIntersection trajectoryPositions
+    print $ distanceFromOrigin closestIntersection
