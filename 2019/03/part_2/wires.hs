@@ -2,7 +2,7 @@ import Data.Maybe
 import Data.Char
 import Data.List
 import Data.List.Split
-import qualified Data.Set as Set
+import qualified Data.Foldable as Foldable
 
 type Direction = Char
 type Magnitude = Int
@@ -45,27 +45,26 @@ manhattanDistance ((x1, y1), (x2, y2)) = abs (x1 - x2) + abs (y1 - y2)
 isIntersection :: (Position, Position) -> Bool
 isIntersection (p1, p2) = manhattanDistance (p1, p2) == 0
 
-findShortestDelayWithin :: SignalDelay -> [TrajectoryDelay] -> Maybe SignalDelay
-findShortestDelayWithin sd (td1:td2:ts) = Just $ head [ sd1 + sd2 | (p1, sd1) <- td1, (p2, sd2) <- td2, sd1 + sd2 <= sd && isIntersection (p1, p2)]
-findShortestDelayWithin _ _ = Nothing
+signalDelay :: Trajectory -> SignalDelay
+signalDelay = length
+
+toSignalDelays :: Trajectory -> [SignalDelay]
+toSignalDelays t = [1,2..signalDelay t]
 
 toTrajectoryDelay :: (Trajectory, [SignalDelay]) -> TrajectoryDelay
 toTrajectoryDelay (t, sd) = zip t sd
 
-allSignalDelays :: Trajectory -> [SignalDelay]
-allSignalDelays t = [1,2..signalDelay t]
+findShortestDelayWithin :: SignalDelay -> [TrajectoryDelay] -> Maybe SignalDelay
+findShortestDelayWithin sd (td1:td2:ts) = Just $ head [ sd1 + sd2 | (p1, sd1) <- td1, (p2, sd2) <- td2, sd1 + sd2 <= sd && isIntersection (p1, p2)]
+findShortestDelayWithin _ _ = Nothing
 
-signalDelay :: Trajectory -> SignalDelay
-signalDelay = length
 
 main = do
     contents <- getContents
     let paths = readPaths contents
         trajectories = map toTrajectory paths
-        signalDelays = map allSignalDelays trajectories
+        signalDelays = map toSignalDelays trajectories
         longestDelay = sum $ map last signalDelays
         trajectoryDelays = zipWith (curry toTrajectoryDelay) trajectories signalDelays
         shortestDelay = findShortestDelayWithin longestDelay trajectoryDelays
-    case shortestDelay of
-        Just sd -> print sd
-        Nothing -> return ()
+    Foldable.forM_ shortestDelay print
