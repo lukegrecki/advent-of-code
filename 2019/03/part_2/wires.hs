@@ -21,7 +21,7 @@ parseToken :: String -> Move
 parseToken (d:m) = (d, read m)
 
 parsePath :: String -> Path
-parsePath s = 
+parsePath s =
     let tokens = splitOn "," s
     in map parseToken tokens
 
@@ -35,7 +35,7 @@ move (x, y) ('L', m) = [ (x - i, y) | i <- [1,2..m] ]
 move (x, y) ('R', m) = [ (x + i, y) | i <- [1,2..m] ]
 
 toTrajectory :: Path -> Trajectory
-toTrajectory p = 
+toTrajectory p =
     let start = [(0, 0)]
     in tail $ concat (scanl (move . last) start p)
 

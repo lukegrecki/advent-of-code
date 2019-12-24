@@ -7,16 +7,12 @@ type PasswordDigits = [Int]
 digits :: Password -> PasswordDigits
 digits = map digitToInt . show
 
-hasAdjacentDigits :: PasswordDigits -> Bool
-hasAdjacentDigits (x1:x2:xs) = hasAdjacentDigits (x2:xs) || (x1 - x2 == 0)
-hasAdjacentDigits _ = False
-
 isMonotonic :: PasswordDigits -> Bool
 isMonotonic (x1:x2:xs) = isMonotonic (x2:xs) && (x2 - x1 >= 0)
 isMonotonic _ = True
 
 hasValidGroups :: PasswordDigits -> Bool
-hasValidGroups pd = 
+hasValidGroups pd =
     let requiredGroupSize = 2
     in requiredGroupSize `elem` map length (group pd)
 

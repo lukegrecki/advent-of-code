@@ -4,11 +4,11 @@ digits :: Int -> [Int]
 digits = map digitToInt . show
 
 hasAdjacentDigits :: [Int] -> Bool
-hasAdjacentDigits (x1:x2:xs) = hasAdjacentDigits (x2:xs) || (x1 - x2 == 0)
+hasAdjacentDigits (x1:x2:xs) = hasAdjacentDigits (x2:xs) || (x1 == x2)
 hasAdjacentDigits _ = False
 
 isMonotonic :: [Int] -> Bool
-isMonotonic (x1:x2:xs) = isMonotonic (x2:xs) && (x2 - x1 >= 0)
+isMonotonic (x1:x2:xs) = isMonotonic (x2:xs) && (x2 >= x1)
 isMonotonic _ = True
 
 isValidPassword :: Int -> Bool
